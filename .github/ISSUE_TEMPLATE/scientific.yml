@@ -1,0 +1,26 @@
+name: Scientific result question
+description: Ask about an equation, convention, unit basis, or calculated result.
+title: "[Scientific result]: "
+labels: [scientific-question]
+body:
+  - type: markdown
+    attributes:
+      value: Do not upload unpublished or confidential research data. MFCBlend is not a process-safety assessment.
+  - type: textarea
+    id: definition
+    attributes:
+      label: Equation, definition, and unit basis in question
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Authoritative reference or hand calculation
+    validations:
+      required: true
+  - type: textarea
+    id: minimal
+    attributes:
+      label: Minimal non-confidential input and result
+    validations:
+      required: true

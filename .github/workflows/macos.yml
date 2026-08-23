@@ -1,0 +1,96 @@
+name: macOS GUI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mfcblend-macos-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  macos-gui:
+    name: macOS / ${{ matrix.arch }} / Python ${{ matrix.python-version }} / Tk
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.actor == github.repository_owner &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+            python-version: "3.10"
+          - os: macos-15
+            arch: arm64
+            python-version: "3.14"
+          - os: macos-15-intel
+            arch: x86_64
+            python-version: "3.13"
+    env:
+      PIP_NO_CACHE_DIR: "1"
+      MPLBACKEND: Agg
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Record native platform and Tk runtime
+        run: |
+          sw_vers
+          uname -m
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          python -VV
+          python -c 'import tkinter; print("Tk", tkinter.TkVersion)'
+      - name: Install source with GUI and development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,gui]"
+          python -m pip check
+      - name: Scientific and import-isolation tests
+        run: |
+          python -m pytest tests/unit tests/integration tests/macos
+          python -c "import sys, mfcblend.cli; assert 'tkinter' not in sys.modules; assert 'PySide6' not in sys.modules; assert 'PyQt6' not in sys.modules"
+      - name: CLI smoke without GUI initialization
+        run: |
+          mfcblend validate examples/co2_hydrogen_system.json
+          mfcblend inverse examples/co2_hydrogen_system.json \
+            examples/target_5co2_20h2.json --output /tmp/mfcblend-macos-cli.json
+          test -s /tmp/mfcblend-macos-cli.json
+      - name: Native Tk window, workflow, export, and clean exit
+        run: |
+          python -m mfcblend.gui --smoke-test \
+            --system examples/co2_hydrogen_system.json \
+            --values examples/target_5co2_20h2.json \
+            --mode inverse --output /tmp/mfcblend-macos-gui.json
+          test -s /tmp/mfcblend-macos-gui.json
+      - name: Explicit noninteractive Matplotlib backend smoke
+        run: |
+          python scripts/generate_preview.py
+          python -c "from PIL import Image; image=Image.open('docs/assets/social-preview.png'); assert image.size == (1280, 640), image.size"
+      - name: Build and clean wheel install
+        run: |
+          python -m build --outdir /tmp/mfcblend-dist .
+          python -m twine check /tmp/mfcblend-dist/*
+          python -m venv /tmp/mfcblend-clean-wheel
+          /tmp/mfcblend-clean-wheel/bin/python -m pip install /tmp/mfcblend-dist/*.whl matplotlib
+          /tmp/mfcblend-clean-wheel/bin/python -m pip check
+          /tmp/mfcblend-clean-wheel/bin/mfcblend --version
+          /tmp/mfcblend-clean-wheel/bin/python -m mfcblend.gui --smoke-test \
+            --system examples/co2_hydrogen_system.json \
+            --values examples/target_5co2_20h2.json \
+            --mode inverse --output /tmp/mfcblend-clean-wheel-gui.json
+          test -s /tmp/mfcblend-clean-wheel-gui.json

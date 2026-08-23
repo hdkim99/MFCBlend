@@ -1,0 +1,20 @@
+name: Feature request
+description: Propose a focused gas-feed planning workflow.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include confidential facility or research information.
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Research workflow and decision supported
+    validations:
+      required: true
+  - type: textarea
+    id: science
+    attributes:
+      label: Definitions, units, assumptions, and references
+    validations:
+      required: true

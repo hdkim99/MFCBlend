@@ -1,0 +1,27 @@
+name: Bug report
+description: Report reproducible incorrect behavior unrelated to scientific interpretation.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not upload confidential, proprietary, export-controlled, or unpublished research data.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Redact sensitive cylinder and facility information.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: MFCBlend and Python versions
+    validations:
+      required: true

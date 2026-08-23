@@ -1,0 +1,140 @@
+name: DGX CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mfcblend-dgx-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  required:
+    name: DGX / required
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.actor == github.repository_owner &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: [self-hosted, Linux, ARM64, dgx-spark]
+    timeout-minutes: 60
+    env:
+      PIP_NO_CACHE_DIR: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          clean: true
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+      - name: Configure validated shared Tk and Xvfb runtime
+        env:
+          MFCBLEND_GUI_RUNTIME: /opt/catalysttwin-actions/shared-gui-runtime
+        run: |
+          set -eu
+          test -x "$MFCBLEND_GUI_RUNTIME/usr/bin/Xvfb"
+          test -x "$MFCBLEND_GUI_RUNTIME/usr/bin/xvfb-run"
+          test -d "$MFCBLEND_GUI_RUNTIME/usr/lib/aarch64-linux-gnu"
+          test -d "$MFCBLEND_GUI_RUNTIME/usr/share/tcltk/tk8.6"
+          echo "$MFCBLEND_GUI_RUNTIME/usr/bin" >> "$GITHUB_PATH"
+          {
+            echo "LD_LIBRARY_PATH=$MFCBLEND_GUI_RUNTIME/usr/lib/aarch64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            echo "TK_LIBRARY=$MFCBLEND_GUI_RUNTIME/usr/share/tcltk/tk8.6"
+          } >> "$GITHUB_ENV"
+      - name: Create isolated job environments
+        run: |
+          export MFCBLEND_CI_ROOT="$RUNNER_TEMP/mfcblend-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          echo "MFCBLEND_CI_ROOT=$MFCBLEND_CI_ROOT" >> "$GITHUB_ENV"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          root = Path(os.environ["MFCBLEND_CI_ROOT"]).resolve()
+          runner_temp = Path(os.environ["RUNNER_TEMP"]).resolve()
+          if root.parent != runner_temp or not root.name.startswith("mfcblend-ci-"):
+              raise RuntimeError(f"Unsafe CI root: {root}")
+          root.mkdir()
+          PY
+          python -m venv "$MFCBLEND_CI_ROOT/dev-venv"
+          python -m venv "$MFCBLEND_CI_ROOT/wheel-venv"
+      - name: Install development environment
+        run: |
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m pip install --upgrade pip
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m pip install -e ".[dev]"
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m pip check
+          xvfb-run -a "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -c 'import tkinter; print(tkinter.TkVersion)'
+      - name: Ruff format
+        run: >-
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m ruff format --check .
+      - name: Ruff lint
+        run: >-
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m ruff check .
+      - name: Strict type check
+        run: >-
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m mypy src
+      - name: Unit, integration, and scientific regression tests
+        run: >-
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m pytest
+      - name: CLI and example workflow smoke
+        run: |
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/mfcblend" --help
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/mfcblend" validate examples/co2_hydrogen_system.json
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/mfcblend" inverse \
+            examples/co2_hydrogen_system.json examples/target_5co2_20h2.json \
+            --output "$MFCBLEND_CI_ROOT/example.json"
+          test -s "$MFCBLEND_CI_ROOT/example.json"
+      - name: Real Tk widget workflow and exit smoke
+        run: |
+          xvfb-run -a "$MFCBLEND_CI_ROOT/dev-venv/bin/python" tests/gui_widget_smoke.py \
+            examples/co2_hydrogen_system.json examples/target_5co2_20h2.json \
+            "$MFCBLEND_CI_ROOT/gui.json"
+          test -s "$MFCBLEND_CI_ROOT/gui.json"
+      - name: Build and validate distributions
+        run: |
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m build --outdir "$MFCBLEND_CI_ROOT/dist" .
+          "$MFCBLEND_CI_ROOT/dev-venv/bin/python" -m twine check "$MFCBLEND_CI_ROOT"/dist/*
+      - name: Clean wheel installation on ARM64
+        run: |
+          "$MFCBLEND_CI_ROOT/wheel-venv/bin/python" -m pip install --upgrade pip
+          "$MFCBLEND_CI_ROOT/wheel-venv/bin/python" -m pip install "$MFCBLEND_CI_ROOT"/dist/*.whl
+          "$MFCBLEND_CI_ROOT/wheel-venv/bin/python" -m pip check
+          "$MFCBLEND_CI_ROOT/wheel-venv/bin/python" - <<'PY'
+          import platform
+          import sys
+          import mfcblend
+          import mfcblend.cli
+
+          assert platform.machine().lower() in {"arm64", "aarch64"}
+          assert mfcblend.__version__ == "0.1.0"
+          assert "tkinter" not in sys.modules
+          assert "matplotlib.pyplot" not in sys.modules
+          PY
+          "$MFCBLEND_CI_ROOT/wheel-venv/bin/mfcblend" forward \
+            examples/co2_hydrogen_system.json examples/setpoints_5co2_20h2.json \
+            --output "$MFCBLEND_CI_ROOT/wheel.csv"
+          test -s "$MFCBLEND_CI_ROOT/wheel.csv"
+      - name: Clean isolated job environment
+        if: always()
+        run: |
+          python - <<'PY'
+          import os
+          import shutil
+          from pathlib import Path
+
+          root = Path(os.environ["MFCBLEND_CI_ROOT"]).resolve()
+          runner_temp = Path(os.environ["RUNNER_TEMP"]).resolve()
+          if root.parent != runner_temp or not root.name.startswith("mfcblend-ci-"):
+              raise RuntimeError(f"Unsafe cleanup target: {root}")
+          shutil.rmtree(root, ignore_errors=True)
+          PY
+          test -z "$(git status --porcelain)"

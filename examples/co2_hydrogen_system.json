@@ -1,0 +1,28 @@
+{
+  "flow_unit": "sccm",
+  "standard_conditions": {
+    "temperature_k": 273.15,
+    "pressure_pa": 101325.0
+  },
+  "report": {
+    "ratios": [["H2", "CO2"]],
+    "diluents": ["N2"]
+  },
+  "cylinders": [
+    {
+      "name": "CO2_mix",
+      "composition": {"CO2": 0.10, "N2": 0.90},
+      "mfc": {"minimum": 2.0, "maximum": 200.0, "turndown": 100.0}
+    },
+    {
+      "name": "H2_mix",
+      "composition": {"H2": 0.50, "N2": 0.50},
+      "mfc": {"minimum": 2.0, "maximum": 200.0, "turndown": 100.0}
+    },
+    {
+      "name": "N2",
+      "composition": {"N2": 1.0},
+      "mfc": {"minimum": 1.0, "maximum": 500.0, "turndown": 200.0}
+    }
+  ]
+}

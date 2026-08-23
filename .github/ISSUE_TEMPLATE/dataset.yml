@@ -1,0 +1,26 @@
+name: Real dataset compatibility
+description: Propose or report a public catalytic-reactor feed dataset.
+title: "[Dataset]: "
+labels: [dataset]
+body:
+  - type: markdown
+    attributes:
+      value: Only link data you are authorized to share. Do not upload confidential or unpublished data.
+  - type: input
+    id: identifier
+    attributes:
+      label: DOI or stable identifier
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: Dataset license
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Files, checksum, and proposed validation scope
+    validations:
+      required: true
