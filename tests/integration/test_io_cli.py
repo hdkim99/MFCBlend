@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from mfcblend import __version__
 from mfcblend.application import RunRequest, execute_and_export
 from mfcblend.core import SolutionStatus
 from mfcblend.io import load_system
@@ -109,6 +110,19 @@ def test_cli_and_core_import_do_not_load_gui_or_plotting() -> None:
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
+
+
+def test_cli_version_matches_package_metadata() -> None:
+    completed = subprocess.run(
+        [sys.executable, "-m", "mfcblend.cli", "--version"],
+        cwd=ROOT,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout.strip() == f"mfcblend {__version__}"
 
 
 def test_config_records_explicit_reference_conditions() -> None:

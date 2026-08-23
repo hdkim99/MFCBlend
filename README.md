@@ -21,7 +21,7 @@ flammability/process-safety certification tool.
 
 ## Install
 
-Install the published 0.1.0 package from PyPI:
+Install the published package from PyPI:
 
 ```bash
 python -m venv .venv
@@ -146,7 +146,7 @@ Implemented:
 - ideal-gas molar flow, ideal partial pressure, reactant ratios, and GHSV API;
 - JSON inputs and JSON/CSV result export.
 
-Explicitly unsupported in 0.1.0:
+Explicitly unsupported in 0.1.x:
 
 - instrument communication or automatic setpoint application;
 - non-ideal-gas corrections, calibration-gas correction factors, uncertainty,
@@ -180,5 +180,5 @@ commands.
 ## Development and citation
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
-[CITATION.cff](CITATION.cff). Version 0.1.0 is the current alpha release; 1.0.0 requires
+[CITATION.cff](CITATION.cff). Version 0.1.1 is the current alpha release; 1.0.0 requires
 external user experience and broader real-data validation.

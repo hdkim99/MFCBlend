@@ -8,6 +8,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from mfcblend import __version__
 from mfcblend.application import RunRequest, execute
 from mfcblend.core import InputError
 from mfcblend.io import export_result, load_system, result_dict
@@ -18,7 +19,7 @@ def _parser() -> argparse.ArgumentParser:
         prog="mfcblend",
         description="Plan catalytic-reactor gas feeds from cylinders and constrained MFCs.",
     )
-    parser.add_argument("--version", action="version", version="%(prog)s 0.1.0")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     validate = subparsers.add_parser("validate", help="validate a feed-system JSON file")
