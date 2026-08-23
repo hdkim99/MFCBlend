@@ -21,11 +21,16 @@ flammability/process-safety certification tool.
 
 ## Install
 
+Until the first PyPI release, install the public repository source:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install mfcblend
+python -m pip install "git+https://github.com/hdkim99/MFCBlend.git"
 ```
+
+After a PyPI release is published, `python -m pip install mfcblend` is the
+equivalent package install.
 
 The headless core and CLI do not import Tkinter, Qt, or a Matplotlib GUI backend.
 For the desktop workflow and optional result figure support:
@@ -35,8 +40,8 @@ python -m pip install "mfcblend[gui]"
 python -m mfcblend.gui
 ```
 
-When installing from source before the first PyPI release, use `python -m pip
-install .` or `python -m pip install ".[gui]"`.
+For a local checkout, use `python -m pip install .` or `python -m pip install
+".[gui]"`.
 
 ## 30-second inverse example
 
