@@ -21,16 +21,19 @@ flammability/process-safety certification tool.
 
 ## Install
 
-Until the first PyPI release, install the public repository source:
+Install the published 0.1.0 package from PyPI:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install "git+https://github.com/hdkim99/MFCBlend.git"
+python -m pip install mfcblend
 ```
 
-After a PyPI release is published, `python -m pip install mfcblend` is the
-equivalent package install.
+To test unreleased source changes instead, install the public repository:
+
+```bash
+python -m pip install "git+https://github.com/hdkim99/MFCBlend.git"
+```
 
 The headless core and CLI do not import Tkinter, Qt, or a Matplotlib GUI backend.
 For the desktop workflow and optional result figure support:
@@ -177,5 +180,5 @@ commands.
 ## Development and citation
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
-[CITATION.cff](CITATION.cff). Version 0.1.0 is an alpha release; 1.0.0 requires
+[CITATION.cff](CITATION.cff). Version 0.1.0 is the current alpha release; 1.0.0 requires
 external user experience and broader real-data validation.
