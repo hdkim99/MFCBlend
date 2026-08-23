@@ -1,7 +1,8 @@
 """Validated domain models for gas-feed planning.
 
 All compositions are molar fractions. Flow numbers are equivalent volumetric
-flows at one explicitly supplied reference temperature and pressure.
+flows. Reference temperature/pressure and MFC ranges may be explicitly unknown;
+calculations that require missing metadata are then unavailable.
 """
 
 from __future__ import annotations
@@ -78,11 +79,11 @@ class MFCConstraints:
 
 @dataclass(frozen=True)
 class Cylinder:
-    """A cylinder composition and the constraints of its connected MFC."""
+    """A cylinder composition and, when reported, its connected MFC constraints."""
 
     name: str
     composition: Mapping[str, float]
-    mfc: MFCConstraints
+    mfc: MFCConstraints | None
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -105,11 +106,11 @@ class Cylinder:
 
 @dataclass(frozen=True)
 class FeedSystem:
-    """Cylinders sharing one flow unit and reference condition convention."""
+    """Cylinders sharing one flow unit and, when known, one reference convention."""
 
     cylinders: tuple[Cylinder, ...]
     flow_unit: str
-    standard_conditions: StandardConditions
+    standard_conditions: StandardConditions | None
     reported_ratios: tuple[tuple[str, str], ...] = ()
     diluents: tuple[str, ...] = ()
 
@@ -162,7 +163,7 @@ class FeedResult:
     composition: Mapping[str, float]
     component_flows: Mapping[str, float]
     flow_unit: str
-    standard_conditions: StandardConditions
+    standard_conditions: StandardConditions | None
     messages: tuple[str, ...] = field(default_factory=tuple)
     target_composition: Mapping[str, float] | None = None
     target_total_flow: float | None = None

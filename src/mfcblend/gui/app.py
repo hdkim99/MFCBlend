@@ -40,7 +40,7 @@ class MFCBlendApp(ttk.Frame):
         note = ttk.Label(
             self,
             text=(
-                "Ideal linear mixing with explicit MFC limits and reference conditions. "
+                "Ideal linear mixing; unreported MFC limits and reference conditions stay unknown. "
                 "Not a process-safety assessment."
             ),
             wraplength=720,

@@ -1,0 +1,26 @@
+{
+  "validation_id": "MFC-PUB-004",
+  "flow_unit": "sccm",
+  "standard_conditions": null,
+  "cylinders": [
+    {
+      "name": "N2_5.0",
+      "composition": {"N2": 1.0},
+      "mfc": null
+    },
+    {
+      "name": "O2_5.0",
+      "composition": {"O2": 1.0},
+      "mfc": null
+    },
+    {
+      "name": "9pct_CO_in_N2_5.0",
+      "composition": {"CO": 0.09, "N2": 0.91},
+      "mfc": null
+    }
+  ],
+  "report": {
+    "ratios": [["O2", "CO"]],
+    "diluents": ["N2"]
+  }
+}

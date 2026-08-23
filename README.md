@@ -121,8 +121,14 @@ GUI or Matplotlib backend.
 - CLI/API/GUI equality and JSON/CSV export wiring;
 - clean-wheel, headless CLI, Xvfb GUI lifecycle, and native macOS GUI smoke jobs.
 
-A suitably licensed, machine-readable public catalytic-reactor feed dataset has
-not yet been adopted. Real-data validation is therefore **pending**, not claimed.
+Four public real-experiment feed cases now cover component-labelled channels,
+premixed cylinders, N2/He internal standards, dry-basis dilution, same-geometry
+inverse reconstruction, and a compositionally infeasible negative control.
+Their DOI/PMCID, licenses, source-file checksums, exact calculations, unknown
+metadata, and rejected candidates are in
+[`docs/research/public-data-sources.md`](docs/research/public-data-sources.md)
+and
+[`docs/research/public-data-failures.md`](docs/research/public-data-failures.md).
 
 ## Supported scope and limitations
 
@@ -132,7 +138,8 @@ Implemented:
 - forward and inverse modes;
 - exact, approximate, and infeasible status separation;
 - off-or-operating MFC ranges and turndown;
-- explicit `sccm`, `slm`, or `nml/min` reference temperature/pressure;
+- explicit `sccm`, `slm`, or `nml/min` reference temperature/pressure, or an
+  explicit unknown state that blocks amount-flow conversion;
 - ideal-gas molar flow, ideal partial pressure, reactant ratios, and GHSV API;
 - JSON inputs and JSON/CSV result export.
 
@@ -148,6 +155,11 @@ Explicitly unsupported in 0.1.0:
 An `exact` result means only that the stated ideal material-balance target can be
 met within the supplied numerical tolerances and limits. It does not establish
 that the physical setup is safe, calibrated, stable, or accurately mixed.
+
+When a paper does not report MFC operating ranges, MFCBlend preserves `null`
+instead of inventing a range. Its inverse result can be exact for composition
+and total flow while still stating that instrument-range feasibility was not
+assessed.
 
 ## Platforms and GUI
 

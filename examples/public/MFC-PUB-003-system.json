@@ -1,0 +1,26 @@
+{
+  "validation_id": "MFC-PUB-003",
+  "flow_unit": "sccm",
+  "standard_conditions": null,
+  "cylinders": [
+    {
+      "name": "CO2_channel",
+      "composition": {"CO2": 1.0},
+      "mfc": null
+    },
+    {
+      "name": "H2_channel",
+      "composition": {"H2": 1.0},
+      "mfc": null
+    },
+    {
+      "name": "He_internal_standard",
+      "composition": {"He": 1.0},
+      "mfc": null
+    }
+  ],
+  "report": {
+    "ratios": [["H2", "CO2"]],
+    "diluents": ["He"]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "validation_id": "MFC-PUB-002",
+  "flow_unit": "sccm",
+  "standard_conditions": null,
+  "cylinders": [
+    {
+      "name": "5pct_H2_in_N2",
+      "composition": {"H2": 0.05, "N2": 0.95},
+      "mfc": null
+    },
+    {
+      "name": "5pct_D2_in_N2",
+      "composition": {"D2": 0.05, "N2": 0.95},
+      "mfc": null
+    }
+  ],
+  "report": {
+    "ratios": [["H2", "D2"]],
+    "diluents": ["N2"]
+  }
+}

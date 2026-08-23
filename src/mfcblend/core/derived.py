@@ -11,6 +11,10 @@ from .standard import molar_flow
 def total_molar_flow(result: FeedResult) -> float:
     """Return ideal-gas molar flow in mol/s at the stated reference conditions."""
 
+    if result.standard_conditions is None:
+        raise InputError(
+            "Flow reference conditions are unknown; amount-flow conversion is unavailable."
+        )
     return molar_flow(result.total_flow, result.flow_unit, result.standard_conditions)
 
 
@@ -33,6 +37,8 @@ def ghsv(result: FeedResult, catalyst_bed_volume_ml: float) -> float:
 
     if catalyst_bed_volume_ml <= 0:
         raise InputError("Catalyst-bed volume must be greater than zero mL.")
+    if result.standard_conditions is None:
+        raise InputError("Flow reference conditions are unknown; GHSV basis is unavailable.")
     if result.flow_unit in {"sccm", "nml/min"}:
         flow_ml_min = result.total_flow
     elif result.flow_unit == "slm":

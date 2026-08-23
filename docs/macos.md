@@ -18,6 +18,13 @@ Local verification records the actual Mac architecture and Python/Tk versions
 in the release checklist. A platform/architecture combination not shown by a
 passing job or release checklist is **not verified**.
 
+On 2026-08-23, MFC-PUB-003 was run through the native Tk widget workflow on
+macOS 27.0 arm64, Homebrew Python 3.14.7, and Tk 9.0. Window creation,
+public-case forward calculation, JSON export, root destruction, and process exit
+passed. The exported composition was CO2/H2/He = 0.19/0.76/0.05 and retained
+unknown standard conditions. The same public GUI case also passed from a clean
+0.1.0 wheel environment.
+
 ## Clean smoke test
 
 ```bash

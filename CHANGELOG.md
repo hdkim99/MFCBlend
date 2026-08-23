@@ -9,3 +9,8 @@ versioning while the scientific interface remains in 0.x development.
 - Explicit MFC ranges, turndown, reference conditions, and infeasibility status.
 - Python API, CLI, Tkinter GUI, JSON/CSV export, and result plotting.
 - DGX and macOS verification workflows and scientific regression tests.
+- Four DOI-linked public catalytic-feed regressions with provenance, license,
+  source checksums, exact arithmetic, and rejected-candidate register.
+- Explicit unknown states for unreported standard-flow reference conditions and
+  MFC ranges; dependent conversions are blocked and range feasibility is not
+  claimed.

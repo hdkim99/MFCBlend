@@ -1,0 +1,31 @@
+{
+  "validation_id": "MFC-PUB-001",
+  "flow_unit": "sccm",
+  "standard_conditions": null,
+  "cylinders": [
+    {
+      "name": "C2H2_channel",
+      "composition": {"C2H2": 1.0},
+      "mfc": null
+    },
+    {
+      "name": "C3H6_channel",
+      "composition": {"C3H6": 1.0},
+      "mfc": null
+    },
+    {
+      "name": "H2_channel",
+      "composition": {"H2": 1.0},
+      "mfc": null
+    },
+    {
+      "name": "N2_internal_standard",
+      "composition": {"N2": 1.0},
+      "mfc": null
+    }
+  ],
+  "report": {
+    "ratios": [["H2", "C2H2"]],
+    "diluents": ["N2"]
+  }
+}

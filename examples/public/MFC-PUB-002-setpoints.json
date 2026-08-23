@@ -1,0 +1,7 @@
+{
+  "validation_id": "MFC-PUB-002",
+  "setpoints": {
+    "5pct_H2_in_N2": 150.0,
+    "5pct_D2_in_N2": 150.0
+  }
+}

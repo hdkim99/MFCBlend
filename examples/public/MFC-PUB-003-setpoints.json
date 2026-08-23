@@ -1,0 +1,8 @@
+{
+  "validation_id": "MFC-PUB-003",
+  "setpoints": {
+    "CO2_channel": 4.75,
+    "H2_channel": 19.0,
+    "He_internal_standard": 1.25
+  }
+}

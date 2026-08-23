@@ -23,6 +23,12 @@ interval. The tool does not invent a minimum from a device class. If the user
 provides a turndown ratio, it is interpreted explicitly as full scale divided by
 minimum controllable flow.
 
+When a source does not report an MFC range, JSON records `"mfc": null`.
+Forward mode then checks only that the reported setpoint is nonnegative. Inverse
+mode uses a nonnegative mathematical bound but explicitly states that physical
+range/turndown feasibility was not assessed. An absent upper bound is not an
+inferred infinite-capacity instrument.
+
 Because zero plus a nonzero interval is not one continuous bound, active subsets
 are enumerated rather than silently permitting a below-minimum setpoint. Version
 0.1.0 limits this exact enumeration to 16 MFCs.
@@ -44,9 +50,11 @@ Sources:
 - IUPAC Gold Book, [standard pressure](https://goldbook.iupac.org/terms/view/S05921), DOI [10.1351/goldbook.S05921](https://doi.org/10.1351/goldbook.S05921). IUPAC recommends 100000 Pa, while 101325 Pa was historically common.
 - BIPM, [The International System of Units (SI), 9th edition](https://www.bipm.org/en/publications/si-brochure). The molar gas constant has an exact value following the fixed Boltzmann and Avogadro constants.
 
-These differing conventions are why the input schema requires both reference
-temperature and reference pressure instead of assigning meaning from `sccm` or
-`nml/min` alone.
+These differing conventions are why the input schema never assigns meaning from
+`sccm` or `nml/min` alone. A known convention records both reference temperature
+and reference pressure. An unreported convention records
+`"standard_conditions": null`; composition arithmetic remains available, but
+molar-flow conversion and reference-state GHSV raise an explicit input error.
 
 ## Derived quantities
 

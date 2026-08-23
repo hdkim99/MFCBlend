@@ -44,11 +44,15 @@ def read_json(path: str | Path) -> dict[str, Any]:
 
 def load_system(path: str | Path) -> FeedSystem:
     data = read_json(path)
-    conditions_data = _object(data.get("standard_conditions"), "standard_conditions")
-    conditions = StandardConditions(
-        temperature_k=_number(conditions_data.get("temperature_k"), "temperature_k"),
-        pressure_pa=_number(conditions_data.get("pressure_pa"), "pressure_pa"),
-    )
+    raw_conditions = data.get("standard_conditions")
+    if raw_conditions is None:
+        conditions = None
+    else:
+        conditions_data = _object(raw_conditions, "standard_conditions")
+        conditions = StandardConditions(
+            temperature_k=_number(conditions_data.get("temperature_k"), "temperature_k"),
+            pressure_pa=_number(conditions_data.get("pressure_pa"), "pressure_pa"),
+        )
     raw_cylinders = data.get("cylinders")
     if not isinstance(raw_cylinders, list):
         raise InputError("cylinders must be a JSON array.")
@@ -65,18 +69,23 @@ def load_system(path: str | Path) -> FeedSystem:
             str(species): _number(fraction, f"fraction {species}")
             for species, fraction in raw_composition.items()
         }
-        mfc_data = _object(cylinder_data.get("mfc"), f"cylinders[{index}].mfc")
-        turndown_raw = mfc_data.get("turndown")
-        turndown = None if turndown_raw is None else _number(turndown_raw, "turndown")
+        raw_mfc = cylinder_data.get("mfc")
+        if raw_mfc is None:
+            mfc = None
+        else:
+            mfc_data = _object(raw_mfc, f"cylinders[{index}].mfc")
+            turndown_raw = mfc_data.get("turndown")
+            turndown = None if turndown_raw is None else _number(turndown_raw, "turndown")
+            mfc = MFCConstraints(
+                minimum=_number(mfc_data.get("minimum"), "minimum"),
+                maximum=_number(mfc_data.get("maximum"), "maximum"),
+                turndown=turndown,
+            )
         cylinders.append(
             Cylinder(
                 name=raw_name,
                 composition=composition,
-                mfc=MFCConstraints(
-                    minimum=_number(mfc_data.get("minimum"), "minimum"),
-                    maximum=_number(mfc_data.get("maximum"), "maximum"),
-                    turndown=turndown,
-                ),
+                mfc=mfc,
             )
         )
     raw_flow_unit = data.get("flow_unit")
@@ -130,7 +139,11 @@ def result_dict(result: FeedResult) -> dict[str, Any]:
     data["scientific_basis"] = {
         "composition_basis": "molar fraction",
         "mixing_model": "steady ideal linear material balance",
-        "flow_reference_model": "ideal gas at explicitly supplied reference T and P",
+        "flow_reference_model": (
+            "ideal gas at explicitly supplied reference T and P"
+            if result.standard_conditions is not None
+            else "unknown; amount-flow conversion unavailable"
+        ),
         "safety_scope": "not a process safety or flammability assessment",
     }
     return data

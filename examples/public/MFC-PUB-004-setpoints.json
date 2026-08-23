@@ -1,0 +1,8 @@
+{
+  "validation_id": "MFC-PUB-004",
+  "setpoints": {
+    "N2_5.0": 84.0,
+    "O2_5.0": 10.0,
+    "9pct_CO_in_N2_5.0": 6.0
+  }
+}

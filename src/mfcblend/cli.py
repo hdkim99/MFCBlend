@@ -27,7 +27,9 @@ def _parser() -> argparse.ArgumentParser:
     for mode in ("forward", "inverse"):
         command = subparsers.add_parser(mode, help=f"run a {mode} gas-feed calculation")
         command.add_argument(
-            "system", type=Path, help="cylinders, MFC limits, and reference conditions"
+            "system",
+            type=Path,
+            help="cylinders plus reported MFC limits/reference conditions (null if unknown)",
         )
         command.add_argument(
             "values", type=Path, help="setpoints JSON (forward) or target JSON (inverse)"

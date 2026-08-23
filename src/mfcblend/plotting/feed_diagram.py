@@ -34,6 +34,12 @@ def save_feed_diagram(
     axis.axis("off")
 
     axis.text(0.6, 5.75, "MFCBlend", color="#e8f0ff", fontsize=27, fontweight="bold")
+    reference = (
+        f"{result.standard_conditions.temperature_k:g} K, "
+        f"{result.standard_conditions.pressure_pa:g} Pa absolute"
+        if result.standard_conditions is not None
+        else "unknown (amount-flow conversion unavailable)"
+    )
     axis.text(
         0.6,
         5.35,
@@ -124,11 +130,7 @@ def save_feed_diagram(
     axis.text(
         0.7,
         0.42,
-        (
-            f"Reference: {result.standard_conditions.temperature_k:g} K, "
-            f"{result.standard_conditions.pressure_pa:g} Pa absolute  •  "
-            "ideal linear material balance  •  not a safety assessment"
-        ),
+        (f"Reference: {reference}  •  ideal linear material balance  •  not a safety assessment"),
         color="#7890ad",
         fontsize=9,
     )

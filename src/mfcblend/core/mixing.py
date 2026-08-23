@@ -21,7 +21,9 @@ def _ordered_setpoints(system: FeedSystem, setpoints: Mapping[str, float]) -> np
         value = float(setpoints.get(cylinder.name, 0.0))
         if not isfinite(value):
             raise InputError(f"Setpoint for {cylinder.name!r} must be finite.")
-        if not cylinder.mfc.accepts(value):
+        if value < -1e-12:
+            raise InputError(f"Setpoint for {cylinder.name!r} cannot be negative.")
+        if cylinder.mfc is not None and not cylinder.mfc.accepts(value):
             raise InputError(
                 f"Setpoint {value:g} for {cylinder.name!r} is neither off nor within "
                 f"[{cylinder.mfc.effective_minimum:g}, {cylinder.mfc.maximum:g}] "
@@ -29,6 +31,16 @@ def _ordered_setpoints(system: FeedSystem, setpoints: Mapping[str, float]) -> np
             )
         ordered.append(0.0 if abs(value) <= 1e-12 else value)
     return np.asarray(ordered, dtype=float)
+
+
+def _unreported_range_message(system: FeedSystem) -> str | None:
+    names = [cylinder.name for cylinder in system.cylinders if cylinder.mfc is None]
+    if not names:
+        return None
+    return (
+        "MFC operating ranges/turndown were not reported for "
+        f"{', '.join(names)}; range feasibility was not assessed for those channels."
+    )
 
 
 def _forward_from_vector(system: FeedSystem, flows: np.ndarray) -> FeedResult:
@@ -58,6 +70,14 @@ def _forward_from_vector(system: FeedSystem, flows: np.ndarray) -> FeedResult:
     diluent_fraction = (
         sum(composition[species] for species in system.diluents) if system.diluents else None
     )
+    messages = [
+        "Composition is a molar-fraction result from ideal mixing of the stated "
+        "cylinder compositions.",
+        "This plan does not assess mixture flammability, compatibility, or process safety.",
+    ]
+    range_message = _unreported_range_message(system)
+    if range_message is not None:
+        messages.insert(1, range_message)
     return FeedResult(
         status=SolutionStatus.EXACT,
         setpoints={
@@ -71,11 +91,7 @@ def _forward_from_vector(system: FeedSystem, flows: np.ndarray) -> FeedResult:
         standard_conditions=system.standard_conditions,
         ratios=ratios,
         diluent_fraction=diluent_fraction,
-        messages=(
-            "Composition is a molar-fraction result from ideal mixing of the stated "
-            "cylinder compositions.",
-            "This plan does not assess mixture flammability, compatibility, or process safety.",
-        ),
+        messages=tuple(messages),
     )
 
 
@@ -151,10 +167,18 @@ def inverse_mix(
         # component and total-flow residuals dimensionless and comparable.
         matrix = np.vstack((component_matrix, np.ones(len(active), dtype=float))) / total_flow
         rhs = np.asarray([*target.values(), 1.0], dtype=float)
-        lower = np.asarray(
-            [system.cylinders[index].mfc.effective_minimum for index in active], dtype=float
-        )
-        upper = np.asarray([system.cylinders[index].mfc.maximum for index in active], dtype=float)
+        lower_values: list[float] = []
+        upper_values: list[float] = []
+        for index in active:
+            mfc = system.cylinders[index].mfc
+            if mfc is None:
+                lower_values.append(0.0)
+                upper_values.append(float("inf"))
+            else:
+                lower_values.append(mfc.effective_minimum)
+                upper_values.append(mfc.maximum)
+        lower = np.asarray(lower_values, dtype=float)
+        upper = np.asarray(upper_values, dtype=float)
         fixed = np.isclose(lower, upper, rtol=1e-12, atol=1e-12)
         active_solution = np.empty(len(active), dtype=float)
         active_solution[fixed] = (lower[fixed] + upper[fixed]) / 2
@@ -183,6 +207,14 @@ def inverse_mix(
             best = (residual, flows, forward, composition_error, flow_error)
 
     if best is None:
+        messages = [
+            "Target composition is infeasible with the available cylinders and documented "
+            "MFC operating ranges.",
+            "No setpoints are returned as a successful plan.",
+        ]
+        range_message = _unreported_range_message(system)
+        if range_message is not None:
+            messages.insert(1, range_message)
         return FeedResult(
             status=SolutionStatus.INFEASIBLE,
             setpoints={},
@@ -193,11 +225,7 @@ def inverse_mix(
             standard_conditions=system.standard_conditions,
             target_composition=target,
             target_total_flow=total_flow,
-            messages=(
-                "Target composition is infeasible with the available cylinders and MFC "
-                "operating ranges.",
-                "No setpoints are returned as a successful plan.",
-            ),
+            messages=tuple(messages),
         )
 
     _, flows, forward, composition_error, flow_error = best
@@ -206,6 +234,15 @@ def inverse_mix(
         and flow_error <= total_flow_tolerance * max(1.0, total_flow)
     )
     if not is_exact and not allow_approximate:
+        messages = [
+            "Target composition is infeasible within the requested tolerances and documented "
+            "MFC operating ranges.",
+            "The achieved composition is diagnostic only; no setpoints are returned "
+            "as a successful plan.",
+        ]
+        range_message = _unreported_range_message(system)
+        if range_message is not None:
+            messages.insert(1, range_message)
         return FeedResult(
             status=SolutionStatus.INFEASIBLE,
             setpoints={},
@@ -220,12 +257,7 @@ def inverse_mix(
             total_flow_error=flow_error,
             ratios=forward.ratios,
             diluent_fraction=forward.diluent_fraction,
-            messages=(
-                "Target composition is infeasible within the requested tolerances and MFC "
-                "operating ranges.",
-                "The achieved composition is diagnostic only; no setpoints are returned "
-                "as a successful plan.",
-            ),
+            messages=tuple(messages),
         )
 
     status = SolutionStatus.EXACT if is_exact else SolutionStatus.APPROXIMATE
@@ -234,6 +266,14 @@ def inverse_mix(
         if is_exact
         else "Only an approximate constrained solution was found; review the reported residuals."
     )
+    messages = [
+        status_message,
+        "The solve uses ideal linear mixing on a molar-flow basis.",
+        "This plan does not assess mixture flammability, compatibility, or process safety.",
+    ]
+    range_message = _unreported_range_message(system)
+    if range_message is not None:
+        messages.insert(2, range_message)
     return FeedResult(
         status=status,
         setpoints={
@@ -251,9 +291,5 @@ def inverse_mix(
         total_flow_error=flow_error,
         ratios=forward.ratios,
         diluent_fraction=forward.diluent_fraction,
-        messages=(
-            status_message,
-            "The solve uses ideal linear mixing on a molar-flow basis.",
-            "This plan does not assess mixture flammability, compatibility, or process safety.",
-        ),
+        messages=tuple(messages),
     )
