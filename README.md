@@ -180,5 +180,5 @@ commands.
 ## Development and citation
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
-[CITATION.cff](CITATION.cff). Version 0.1.1 is the current alpha release; 1.0.0 requires
+[CITATION.cff](CITATION.cff). Version 0.1.2 is the current alpha release; 1.0.0 requires
 external user experience and broader real-data validation.

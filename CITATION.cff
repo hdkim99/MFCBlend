@@ -7,7 +7,7 @@ authors:
     given-names: "Hyun Dong"
 repository-code: "https://github.com/hdkim99/MFCBlend"
 url: "https://github.com/hdkim99/MFCBlend"
-version: 0.1.1
+version: 0.1.2
 license: MIT
 keywords:
   - catalysis
